@@ -1,2 +1,3 @@
 semantic_segmentation/*.hdf5
 semantic_segmentation/logs_road_bce
+sem_seg_pytorch/*.pt
