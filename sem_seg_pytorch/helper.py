@@ -6,7 +6,44 @@ import torchvision.transforms as transforms
 import os
 import cv2
 import numpy as np
+from tqdm import tqdm
 
+losses = list()
+
+def dice_loss(inp, target):
+    smooth = 1.
+
+    iflat = inp.view(-1)
+    tflat = target.view(-1)
+    intersection = (iflat * tflat).sum()
+    
+    return 1 - ((2. * intersection + smooth) / (iflat.sum() + tflat.sum() + smooth))
+
+def train(model, train_loader, epoch, num_epochs, loss_function, optimiser, savename, loss_min):
+    model.train()
+    loop = tqdm(train_loader)
+    for data, target in loop:
+        data, target = data.float().cuda(), target.float().cuda()
+        
+        optimiser.zero_grad()
+        prediction = model(data)
+        prediction = prediction.squeeze(1)
+        
+        loss = loss_function(prediction, target) + dice_loss(prediction, target)
+        losses.append(loss.item())
+        
+        loss.backward()
+        optimiser.step()
+        
+        loop.set_description('Epoch {}/{}'.format(epoch + 1, num_epochs))
+        loop.set_postfix(loss = loss.item())
+        
+        if loss.item() < loss_min :
+            loss_min = loss.item()
+            torch.save(model.state_dict(), savename)
+            
+    return loss_min
+            
 class CityscapesDataset(data.Dataset) :
     def __init__(self, root = '/home/himanshu/dl/dataset/cityscape/', transform = None) :
         self.img_list, self.mask_list = self.get_filenames(root)
