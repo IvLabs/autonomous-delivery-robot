@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.utils import data
 import torchvision
 import torchvision.transforms as transforms
@@ -17,7 +18,7 @@ def dice_loss(inp, target):
     tflat = target.view(-1)
     intersection = (iflat * tflat).sum()
     
-    return 1 - ((2. * intersection + smooth) / (iflat.sum() + tflat.sum() + smooth))
+    return -((2. * intersection + smooth) / (iflat.sum() + tflat.sum() + smooth))
 
 def train(model, train_loader, epoch, num_epochs, loss_function, optimiser, savename, loss_min):
     model.train()
@@ -29,14 +30,14 @@ def train(model, train_loader, epoch, num_epochs, loss_function, optimiser, save
         prediction = model(data)
         prediction = prediction.squeeze(1)
         
-        loss = loss_function(prediction, target) + dice_loss(prediction, target)
+        loss = loss_function(prediction, target) + dice_loss(F.softmax(prediction, dim = 1), target)
         losses.append(loss.item())
         
         loss.backward()
         optimiser.step()
         
         loop.set_description('Epoch {}/{}'.format(epoch + 1, num_epochs))
-        loop.set_postfix(loss = loss.item())
+        loop.set_postfix(loss = [np.round(loss.item(), 6), np.round(loss_min, 6)])
         
         if loss.item() < loss_min :
             loss_min = loss.item()

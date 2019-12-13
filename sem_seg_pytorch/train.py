@@ -17,7 +17,7 @@ transform = transforms.Compose([
                 transforms.Normalize(mean = mean, std = std)
             ])
 dataset = CityscapesDataset(transform = transform)
-dataloader = data.DataLoader(dataset, batch_size = 2, shuffle = True, drop_last = True)
+dataloader = data.DataLoader(dataset, batch_size = 3, shuffle = True, drop_last = True)
 
 net = ENet(num_classes = 1)
 net = net.cuda()
@@ -25,7 +25,7 @@ net = net.cuda()
 optimizer = torch.optim.Adam(net.parameters(), lr = 1e-4)
 criterion = nn.BCEWithLogitsLoss()
         
-num_epochs = 2
+num_epochs = 5
 loss_min = 100
 for epoch in range(num_epochs) :
     loss_min = train(model = net, train_loader = dataloader, loss_function = criterion, optimiser = optimizer, epoch = epoch, num_epochs = num_epochs, savename = 'road_bce_dice.pt', loss_min = loss_min)
