@@ -20,8 +20,9 @@ def dice_loss(inp, target):
     
     return -((2. * intersection + smooth) / (iflat.sum() + tflat.sum() + smooth))
 
-def train(model, train_loader, epoch, num_epochs, loss_function, optimiser, savename, loss_min):
+def train(model, train_loader, epoch, num_epochs, loss_function, optimiser, savename):
     model.train()
+    count = 0
     loop = tqdm(train_loader)
     for data, target in loop:
         data, target = data.float().cuda(), target.float().cuda()
@@ -37,13 +38,11 @@ def train(model, train_loader, epoch, num_epochs, loss_function, optimiser, save
         optimiser.step()
         
         loop.set_description('Epoch {}/{}'.format(epoch + 1, num_epochs))
-        loop.set_postfix(loss = [np.round(loss.item(), 6), np.round(loss_min, 6)])
-        
-        if loss.item() < loss_min :
-            loss_min = loss.item()
+        loop.set_postfix(loss = loss.item())
+        count += 1
+        if count % 100 == 0 : 
             torch.save(model.state_dict(), savename)
-            
-    return loss_min
+            count = 0
             
 class CityscapesDataset(data.Dataset) :
     def __init__(self, root = '/home/himanshu/dl/dataset/cityscape/', transform = None) :

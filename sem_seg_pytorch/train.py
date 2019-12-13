@@ -28,4 +28,4 @@ criterion = nn.BCEWithLogitsLoss()
 num_epochs = 5
 loss_min = 100
 for epoch in range(num_epochs) :
-    loss_min = train(model = net, train_loader = dataloader, loss_function = criterion, optimiser = optimizer, epoch = epoch, num_epochs = num_epochs, savename = 'road_bce_dice.pt', loss_min = loss_min)
+    train(model = net, train_loader = dataloader, loss_function = criterion, optimiser = optimizer, epoch = epoch, num_epochs = num_epochs, savename = 'road_bce_dice.pt')
