@@ -9,8 +9,6 @@ import cv2
 import numpy as np
 from tqdm import tqdm
 
-losses = list()
-
 def dice_loss(inp, target):
     smooth = 1.
 
@@ -20,12 +18,27 @@ def dice_loss(inp, target):
     
     return -((2. * intersection + smooth) / (iflat.sum() + tflat.sum() + smooth))
 
-def train(model, train_loader, epoch, num_epochs, loss_function, optimiser, savename):
+def iou(mask1, mask2, smooth = 1e-6) :
+    pred_inds = (mask1 > 0)
+    target_inds = (mask2 > 0)
+    intersection = (pred_inds[target_inds]).long().sum().item()
+    union = pred_inds.long().sum().item() + target_inds.long().sum().item() - intersection
+    return(float(intersection) / float(union))
+
+def train(model, train_loader, val_loader, epoch, num_epochs, loss_function, optimiser, savename, highest_iou):
     model.train()
+    losses = list()
+    gpu1 = 'cuda:0'
+    gpu2 = 'cuda:1'
+    ious = list()
+    max_iou = highest_iou
     count = 0
+    savename2 = savename[ : -3] + '_opt.pt'
     loop = tqdm(train_loader)
     for data, target in loop:
-        data, target = data.float().cuda(), target.float().cuda()
+        model.train()
+        model = model.to(gpu1)
+        data, target = data.float().to(gpu1), target.float().to(gpu1)
         
         optimiser.zero_grad()
         prediction = model(data)
@@ -40,29 +53,48 @@ def train(model, train_loader, epoch, num_epochs, loss_function, optimiser, save
         loop.set_description('Epoch {}/{}'.format(epoch + 1, num_epochs))
         loop.set_postfix(loss = loss.item())
         count += 1
-        if count % 100 == 0 : 
-            torch.save(model.state_dict(), savename)
-            count = 0
-            
+        if count % 200 == 0 :
+            model.eval()
+            for data, target in val_loader : 
+                model = model.to(gpu2)
+                data, target = data.float().to(gpu2), target.float()
+
+                prediction = model(data)
+                prediction = prediction.squeeze(1)
+
+                ious.append(iou(target, prediction))
+    
+            avg_iou = sum(ious) / len(ious)
+
+            if avg_iou > max_iou :
+                max_iou = avg_iou
+                torch.save(model.state_dict(), savename)
+                torch.save(optimiser.state_dict(), savename2)
+    
+            print('avg_iou: ', avg_iou)
+        
+    print('avg_loss: ', sum(losses) / len(losses))
+    return max_iou
+
 class CityscapesDataset(data.Dataset) :
-    def __init__(self, root = '/home/himanshu/dl/dataset/cityscape/', transform = None) :
-        self.img_list, self.mask_list = self.get_filenames(root)
+    def __init__(self, root = '/home/himanshu/dl/dataset/cityscape/', image_path = 'image_edited', transform = None) :
+        self.img_list, self.mask_list = self.get_filenames(root, image_path)
         self.transform = transform
         
     def __getitem__(self, idx) :
         img = cv2.imread(self.img_list[idx])
-        img = cv2.resize(img, (2028, 802))
+        img = cv2.resize(img, (506, 200))
         
         mask = cv2.imread(self.mask_list[idx], cv2.IMREAD_GRAYSCALE)
-        mask = cv2.resize(mask, (2028, 802))
+        mask = cv2.resize(mask, (506, 200))
         mask = self.encode_segmap(mask)
         
         if self.transform :
             img = self.transform(img)
-            assert(img.shape == (3, 802, 2028))
+            assert(img.shape == (3, 200, 506))
         else :
-            assert(img.shape == (802, 2028, 3))
-        assert(mask.shape == (802, 2028))
+            assert(img.shape == (200, 506, 3))
+        assert(mask.shape == (200, 506))
         return img, mask
     
     def __len__(self) :
@@ -77,11 +109,11 @@ class CityscapesDataset(data.Dataset) :
         mask[mask != 0] = 1
         return mask
     
-    def get_filenames(self, path) :
+    def get_filenames(self, path, image_path) :
         img_list = list()
         mask_list = list()
-        for filename in os.listdir(os.path.join(path, 'image_edited')):
-            img_list.append(os.path.join(path, 'image_edited', filename))
+        for filename in os.listdir(os.path.join(path, image_path)):
+            img_list.append(os.path.join(path, image_path, filename))
             mask_list.append(os.path.join(path, 'mask_edited', filename[: -15]) + 'gtCoarse_color.png')
         return img_list, mask_list
     
