@@ -1,7 +1,0 @@
-semantic_segmentation/*.hdf5
-semantic_segmentation/logs_road_bce
-sem_seg_pytorch/*.pt
-sem_seg_pytorch/*.avi
-sem_seg_pytorch/*.mp4
-sem_seg_pytorch/testing.*
-sem_seg_pytorch/.ipynb_checkpoints*
