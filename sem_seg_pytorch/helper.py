@@ -56,8 +56,8 @@ def train(model, train_loader, val_loader, epoch, num_epochs, loss_function, opt
         if count % 200 == 0 :
             model.eval()
             for data, target in val_loader : 
-                model = model.to(gpu2)
-                data, target = data.float().to(gpu2), target.float()
+                model = model.to(gpu1)
+                data, target = data.float().to(gpu1), target.float()
 
                 prediction = model(data)
                 prediction = prediction.squeeze(1)
