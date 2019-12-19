@@ -7,7 +7,6 @@
 
 import roslib
 import rospy
-from ackermann_msgs.msg import AckermannDriveStamped
 from std_msgs.msg import Int16
 from ackermann_teleop.msg import cmd
 from getkey import getkey, keys
@@ -43,7 +42,7 @@ def servo_pub():
     speed = 0
     msg = cmd()
 
-    pub = rospy.Publisher('servo', cmd, queue_size = 10)
+    pub = rospy.Publisher('servo', cmd, queue_size = 5)
     rospy.init_node('servo_pub', anonymous = True)
     rate = rospy.Rate(10)
     while not rospy.is_shutdown():
@@ -64,7 +63,7 @@ def servo_pub():
         else:
             continue
         msg.speed = speed
-        cmd.steering_angle = steering_angle
+        msg.steering_angle = steering_angle
         rospy.loginfo(msg)
         pub.publish(msg)
         rate.sleep()
