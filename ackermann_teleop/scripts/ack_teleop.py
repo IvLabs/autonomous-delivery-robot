@@ -3,7 +3,7 @@
 # @Last modified by:   aniket
 # @Last modified time: 2019-12-19T01:30:09+05:30
 
-
+#!/usr/bin/env python
 
 import roslib
 import rospy
@@ -42,7 +42,7 @@ def servo_pub():
     speed = 0
     msg = cmd()
 
-    pub = rospy.Publisher('servo', cmd, queue_size = 5)
+    pub = rospy.Publisher('servo', cmd, queue_size = 2)
     rospy.init_node('servo_pub', anonymous = True)
     rate = rospy.Rate(10)
     while not rospy.is_shutdown():
