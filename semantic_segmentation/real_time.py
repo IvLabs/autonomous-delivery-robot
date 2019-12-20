@@ -13,10 +13,10 @@ def rescale_frame(frame, percent=75):
 model = load_model('/home/akshay/Projects/autonomous-delivery-bot/road_dicebce.hdf5', custom_objects = {'loss':loss})
 
 #cv2.namedWindow('mask', cv2.WINDOW_NORMAL)
-cap = cv2.VideoCapture('/home/akshay/Projects/autonomous-delivery-bot/test1.mp4')
+cap = cv2.VideoCapture('/home/akshay/Videos/output.avi')
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
-out_shape = (100, 80)
-out = cv2.VideoWriter('out4.avi',fourcc, 30, (1280, 720))
+out_shape = (640, 480)
+out = cv2.VideoWriter('/home/akshay/Videos/mask.avi',fourcc, 15, (640, 480))
 alpha = 0.7
 while(cap.isOpened()): 
     # Capture frame-by-frame
@@ -24,8 +24,9 @@ while(cap.isOpened()):
     if ret == True:
         # frame = cv2.flip(frame, 0)
         # frame = cv2.flip(frame, 1)
-        frame2 = cv2.resize(frame, (1280, 720))
-        frame = cv2.resize(frame, out_shape)
+        # frame2 = cv2.resize(frame, (640, 480))
+        frame2 = frame
+        # frame = cv2.resize(frame, out_shape)
         # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         # frame = rescale_frame(frame, percent = 80)
 
@@ -43,10 +44,10 @@ while(cap.isOpened()):
 
         temp = np.zeros((512,512, 3), np.uint8)
         temp[:,:,1] = results
-        temp = cv2.resize(temp, (1280, 720))
+        temp = cv2.resize(temp, (640, 480))
 
-        segmented = cv2.addWeighted(frame2, alpha, temp, (1-alpha), 0.0)
-        out.write(segmented)
+        # segmented = cv2.addWeighted(frame2, alpha, temp, (1-alpha), 0.0)
+        out.write(temp)
         # cv2.imshow('img', segmented)
     # if (cv2.waitKey(1) & 0xFF == ord('q')):
     #     break

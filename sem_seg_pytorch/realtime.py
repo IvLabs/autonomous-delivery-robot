@@ -21,13 +21,13 @@ transform = transforms.Compose([
             ])
 
 net = ENet(num_classes = 1)
-net.load_state_dict(torch.load('road_bce_dice.pt', map_location = 'cpu'))
+net.load_state_dict(torch.load('saved_models/new_road4.pt', map_location = 'cpu'))
 net.cuda()
 net.eval()
 
 cap = cv2.VideoCapture('/home/akshay/Projects/autonomous-delivery-bot/20191001_181427.mp4')
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
-writer = cv2.VideoWriter('out2.avi', fourcc, 60, (640, 480))
+writer = cv2.VideoWriter('out4.avi', fourcc, 30, (640, 480))
 
 while(cap.isOpened()) :
     ret, frame = cap.read()
@@ -43,9 +43,9 @@ while(cap.isOpened()) :
         
         out = torch.sigmoid(out)
         out = out.squeeze(1).detach().cpu()
-        t = torch.Tensor([0.5])
-        out = (out > t)
-        out = out.float().numpy()
+        # t = torch.Tensor([0.5])
+        # out = (out > t)
+        out = out.numpy()
         end_time = time.time()
 
         fps = 1 / (end_time - start_time)
