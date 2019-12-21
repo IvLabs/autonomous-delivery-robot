@@ -36,21 +36,22 @@ Servo servo;
 void servo_cb( const ackermann_teleop::cmd& cmd){
   servo.write(int(cmd.steering_angle)); //set servo angle, should be from 0-180  
   digitalWrite(13, HIGH-digitalRead(13));  //toggle led 
-  Serial.println(int(cmd.speed)); 
+  Serial.println(int(cmd.speedy));
+  Serial.println(int(cmd.steering_angle)); 
   
-  if (cmd.speed == 1)
+  if (cmd.speedy == 1)
   {
     digitalWrite(b_left1, HIGH);
     digitalWrite(b_left2, LOW);
     analogWrite(sp_pwm, 255);
   }
-  if (cmd.speed == -1)
+  if (cmd.speedy == -1)
   {
     digitalWrite(b_left1, LOW);
     digitalWrite(b_left2, HIGH);
     analogWrite(sp_pwm, 255);
   }
-  if (cmd.speed == 0)
+  if (cmd.speedy == 0)
   {
     digitalWrite(b_left1, LOW); 
     digitalWrite(b_left2, LOW);
@@ -67,7 +68,7 @@ void setup(){
   pinMode(13, OUTPUT);
   pinMode(b_left1, OUTPUT);
   pinMode(b_left2, OUTPUT);
-  Serial.begin(9600);
+  Serial.begin(57600);
   
   nh.initNode();
   nh.subscribe(sub);
