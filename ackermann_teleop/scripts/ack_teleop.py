@@ -43,16 +43,16 @@ def servo_pub():
     while not rospy.is_shutdown():
         key = getkey()
         if key in key_bindings.keys():
-            if key == control_keys['s']:
-                speed = -1
-            elif key == control_keys['w']:
-                speed = 1
+            if key == control_keys['s'] and speedy > -1:
+                speedy = speedy - 1
+            elif key == control_keys['w'] and speedy < 1:
+                speedy = speedy + 1
             elif key == control_keys['a'] and steering_angle > 60 :
                 steering_angle = steering_angle - 30
             elif key == control_keys['d'] and steering_angle < 120:
                 steering_angle = steering_angle + 30
             elif key == control_keys['space']:
-                speed = 0
+                speedy = 0
 		steering_angle = 90
         elif key == '\x03' or key == '\x71':  # ctr-c or q
             break
