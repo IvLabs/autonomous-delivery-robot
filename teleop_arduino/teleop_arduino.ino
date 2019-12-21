@@ -39,13 +39,13 @@ void servo_cb( const ackermann_teleop::cmd& cmd){
   Serial.println(int(cmd.speedy));
   Serial.println(int(cmd.steering_angle)); 
   
-  if (cmd.speedy == 1)
+  if (cmd.speedy == -1)
   {
     digitalWrite(b_left1, HIGH);
     digitalWrite(b_left2, LOW);
     analogWrite(sp_pwm, 255);
   }
-  if (cmd.speedy == -1)
+  if (cmd.speedy == 1)
   {
     digitalWrite(b_left1, LOW);
     digitalWrite(b_left2, HIGH);
