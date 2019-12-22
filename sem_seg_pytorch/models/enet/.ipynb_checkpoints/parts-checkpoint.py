@@ -5,7 +5,7 @@ import torch.nn.functional as F
 class InitialBlock(nn.Module) :
     def __init__(self, in_ch, out_ch, relu = True) : 
         super(InitialBlock, self).__init__()
-        self.conv = nn.Conv2d(in_ch, out_ch - 3, kernel_size = 3, stride = 2, padding = 1)
+        self.conv = nn.Conv2d(in_ch, out_ch - 3, kernel_size = 3, stride = 2, padding = 1, bias = False)
         self.maxpool = nn.MaxPool2d(kernel_size = 2, stride = 2)
         if relu : 
             self.out_activation = nn.ReLU()
@@ -44,7 +44,7 @@ class NormalBottleneck(nn.Module) :
         
         # 1x1 projection convolution
         self.c1 = nn.Sequential(
-            nn.Conv2d(in_ch, int_ch, kernel_size = 1),
+            nn.Conv2d(in_ch, int_ch, kernel_size = 1, bias = False),
             nn.BatchNorm2d(int_ch),
             activation()
         )
@@ -52,23 +52,23 @@ class NormalBottleneck(nn.Module) :
         # main convolution
         if asymmetric :
             self.c2 = nn.Sequential(
-                nn.Conv2d(int_ch, int_ch, kernel_size = (kernel_size, 1), padding = (padding, 0), dilation = dilation),
+                nn.Conv2d(int_ch, int_ch, kernel_size = (kernel_size, 1), padding = (padding, 0), dilation = dilation, bias = False),
                 nn.BatchNorm2d(int_ch),
                 activation(),
-                nn.Conv2d(int_ch, int_ch, kernel_size = (1, kernel_size), padding = (0, padding), dilation = dilation),
+                nn.Conv2d(int_ch, int_ch, kernel_size = (1, kernel_size), padding = (0, padding), dilation = dilation, bias = False),
                 nn.BatchNorm2d(int_ch),
                 activation()
             )
         else :
             self.c2 = nn.Sequential(
-                nn.Conv2d(int_ch, int_ch, kernel_size = kernel_size, padding = padding, dilation = dilation), 
+                nn.Conv2d(int_ch, int_ch, kernel_size = kernel_size, padding = padding, dilation = dilation, bias = False), 
                 nn.BatchNorm2d(int_ch),
                 activation()
             )
         
         # 1x1 expansion convolution
         self.c3 = nn.Sequential(
-            nn.Conv2d(int_ch, in_ch, kernel_size = 1),
+            nn.Conv2d(int_ch, in_ch, kernel_size = 1, bias = False),
             nn.BatchNorm2d(in_ch), 
             activation()
         )
@@ -113,21 +113,21 @@ class DownsampleBottleneck(nn.Module) :
         # extension branch
         # 2x2 projection convolution with stride 2
         self.ext1 = nn.Sequential(
-            nn.Conv2d(in_ch, int_ch, kernel_size = 2, stride = 2),
+            nn.Conv2d(in_ch, int_ch, kernel_size = 2, stride = 2, bias = False),
             nn.BatchNorm2d(int_ch), 
             activation()
         )
         
         # main convolution
         self.ext2 = nn.Sequential(
-            nn.Conv2d(int_ch, int_ch, kernel_size = 3, padding = 1),
+            nn.Conv2d(int_ch, int_ch, kernel_size = 3, padding = 1, bias = False),
             nn.BatchNorm2d(int_ch),
             activation()
         )
         
         # 1x1 projection convolution
         self.ext3 = nn.Sequential(
-            nn.Conv2d(int_ch, out_ch, kernel_size = 1),
+            nn.Conv2d(int_ch, out_ch, kernel_size = 1, bias = False),
             nn.BatchNorm2d(out_ch),
             activation()
         )
@@ -180,7 +180,7 @@ class UpsampleBottleneck(nn.Module) :
             
         # main branch
         self.main1 = nn.Sequential(
-            nn.Conv2d(in_ch, out_ch, kernel_size = 1),
+            nn.Conv2d(in_ch, out_ch, kernel_size = 1, bias = False),
             nn.BatchNorm2d(out_ch)
         )
         
@@ -189,19 +189,19 @@ class UpsampleBottleneck(nn.Module) :
         
         # extension branch
         self.ext1 = nn.Sequential(
-            nn.Conv2d(in_ch, int_ch, kernel_size = 1),
+            nn.Conv2d(in_ch, int_ch, kernel_size = 1, bias = False),
             nn.BatchNorm2d(int_ch),
             activation()
         )
         
         # transposed convolution
-        self.ext_tconv = nn.ConvTranspose2d(int_ch, int_ch, kernel_size = 2, stride = 2)
+        self.ext_tconv = nn.ConvTranspose2d(int_ch, int_ch, kernel_size = 2, stride = 2, bias = False)
         self.ext_bnorm = nn.BatchNorm2d(int_ch)
         self.ext_activation = activation()
         
         # 1x1 expansion convolution
         self.ext2 = nn.Sequential(
-            nn.Conv2d(int_ch, out_ch, kernel_size = 1),
+            nn.Conv2d(int_ch, out_ch, kernel_size = 1, bias = False),
             nn.BatchNorm2d(out_ch),
             activation()
         )

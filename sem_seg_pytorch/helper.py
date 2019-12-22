@@ -11,17 +11,17 @@ from tqdm import tqdm
 
 def dice_loss(inp, target):
     smooth = 1.
-    intersection = (inp * target).sum()
-    return 1 - ((2. * intersection + smooth) / (inp.sum() + target.sum() + smooth))
+    intersection = (torch.abs(inp * target)).sum()
+    return (1 - (((2. * intersection) + smooth) / (torch.pow(inp, 2).sum() + torch.pow(target, 2).sum() + smooth)))
 
 def iou(mask1, mask2, smooth = 1e-6) :
     pred_inds = (mask1 > 0)
     target_inds = (mask2 > 0)
     intersection = (pred_inds[target_inds]).long().sum().item()
     union = pred_inds.long().sum().item() + target_inds.long().sum().item() - intersection
-    return(float(intersection) / float(union))
+    return(float(intersection + smooth) / float(union + smooth))
 
-def train(model, train_loader, val_loader, epoch, num_epochs, loss_function, optimiser, savename, highest_iou):
+def train(model, train_loader, val_loader, epoch, num_epochs, loss_function, optimiser, scheduler, savename, highest_iou):
     model.train()
     losses = list()
     gpu1 = 'cuda:0'
@@ -31,6 +31,7 @@ def train(model, train_loader, val_loader, epoch, num_epochs, loss_function, opt
     count = 0
     savename2 = savename[ : -3] + '_opt.pt'
     loop = tqdm(train_loader)
+    num_steps = len(loop)
     for data, target in loop:
         model.train()
         model = model.to(gpu1)
@@ -40,16 +41,17 @@ def train(model, train_loader, val_loader, epoch, num_epochs, loss_function, opt
         prediction = model(data)
         prediction = prediction.squeeze(1)
         
-        loss = loss_function(prediction, target) # + dice_loss(torch.sigmoid(prediction), target)
+        loss = loss_function(prediction, target) + dice_loss(torch.sigmoid(prediction), target)
         losses.append(loss.item())
         
         loss.backward()
         optimiser.step()
+        scheduler.step()
         
         loop.set_description('Epoch {}/{}'.format(epoch + 1, num_epochs))
         loop.set_postfix(loss = loss.item())
         count += 1
-        if count % 300 == 0 :
+        if count % (num_steps // 3) == 0 :
             model.eval()
             for data, target in val_loader : 
                 model = model.to(gpu1)

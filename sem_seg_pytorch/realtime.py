@@ -13,21 +13,23 @@ from models.enet.model import *
 torch.cuda.set_device(0)
 
 alpha = 0.7
-mean = [0.28689554, 0.32513303, 0.28389177]
-std = [0.18696375, 0.19017339, 0.18720214]
+# mean = [0.28689554, 0.32513303, 0.28389177]
+# std = [0.18696375, 0.19017339, 0.18720214]
+mean = [0.485, 0.456, 0.406]
+std = [0.229, 0.224, 0.225]
 transform = transforms.Compose([
                 transforms.ToTensor(),
                 transforms.Normalize(mean = mean, std = std)
             ])
 
 net = ENet(num_classes = 1)
-net.load_state_dict(torch.load('saved_models/new_road4.pt', map_location = 'cpu'))
+net.load_state_dict(torch.load('saved_models/new_road6.pt', map_location = 'cpu'))
 net.cuda()
 net.eval()
 
-cap = cv2.VideoCapture('/home/akshay/Projects/autonomous-delivery-bot/20191001_181427.mp4')
+cap = cv2.VideoCapture('test1.mp4')
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
-writer = cv2.VideoWriter('out4.avi', fourcc, 30, (640, 480))
+writer = cv2.VideoWriter('out6.avi', fourcc, 30, (640, 480))
 
 while(cap.isOpened()) :
     ret, frame = cap.read()
