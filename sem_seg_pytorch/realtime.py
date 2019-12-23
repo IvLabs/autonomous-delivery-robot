@@ -23,13 +23,14 @@ transform = transforms.Compose([
             ])
 
 net = ENet(num_classes = 1)
-net.load_state_dict(torch.load('saved_models/new_road6.pt', map_location = 'cpu'))
+net.load_state_dict(torch.load('saved_models/final1.pt', map_location = 'cpu'))
 net.cuda()
 net.eval()
 
-cap = cv2.VideoCapture('test1.mp4')
+cap = cv2.VideoCapture('/home/akshay/Projects/autonomous-delivery-bot/output3.avi')
+# cap = cv2.VideoCapture('test1.mp4')
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
-writer = cv2.VideoWriter('out6.avi', fourcc, 30, (640, 480))
+writer = cv2.VideoWriter('output_comparisons/out3_1.avi', fourcc, 15, (640, 480))
 
 while(cap.isOpened()) :
     ret, frame = cap.read()

@@ -16,7 +16,7 @@ transform = transforms.Compose([
             ])
 trainset = CityscapesDataset(transform = transform, size = 2)
 valset = CityscapesDataset(image_path = 'validation', transform = transform, size = 2)
-trainloader = data.DataLoader(trainset, batch_size = 8, shuffle = True, drop_last = True)
+trainloader = data.DataLoader(valset, batch_size = 8, shuffle = True, drop_last = True)
 valloader = data.DataLoader(valset, batch_size = 4, shuffle = True, drop_last = True)
 
 net = ENet(num_classes = 1)
@@ -31,4 +31,4 @@ criterion = nn.BCEWithLogitsLoss()
 num_epochs = 50
 highest_iou = 0
 for epoch in range(num_epochs) :
-    highest_iou = train(model = net, train_loader = trainloader, val_loader = valloader, loss_function = criterion, optimiser = optimizer, scheduler = scheduler, epoch = epoch, num_epochs = num_epochs, savename = 'saved_models/dice_bce_size2.pt', highest_iou = highest_iou)
+    highest_iou = train(model = net, train_loader = trainloader, val_loader = valloader, loss_function = criterion, optimiser = optimizer, scheduler = scheduler, epoch = epoch, num_epochs = num_epochs, savename = 'saved_models/testing.pt', highest_iou = highest_iou)

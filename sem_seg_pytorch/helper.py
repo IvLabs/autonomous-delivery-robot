@@ -77,7 +77,7 @@ def train(model, train_loader, val_loader, epoch, num_epochs, loss_function, opt
 
 class CityscapesDataset(data.Dataset) :
     def __init__(self, root = '/home/himanshu/dl/dataset/cityscape/', image_path = 'image_edited', transform = None, size = 4) :
-        self.img_list, self.mask_list = self.get_filenames(root, image_path)
+        self.img_list, self.mask_list = CityscapesDataset.get_filenames(root, image_path)
         self.transform = transform
         self.inshape = [2029 // size, 803 // size]
         # in case of odd dimensions, make it even (since network can't handle odd dimensions).
@@ -107,7 +107,7 @@ class CityscapesDataset(data.Dataset) :
         
         mask = cv2.imread(self.mask_list[idx], cv2.IMREAD_GRAYSCALE)
         mask = cv2.resize(mask, self.inshape)
-        mask = self.encode_segmap(mask)
+        mask = CityscapesDataset.encode_segmap(mask)
         
         if self.transform :
             img = self.transform(img)
@@ -120,7 +120,8 @@ class CityscapesDataset(data.Dataset) :
     def __len__(self) :
         return len(self.img_list)
     
-    def encode_segmap(self, mask) :
+    @staticmethod
+    def encode_segmap(mask) :
         '''
         During resizing of mask, the pixels other than zero (originally 255) get interpolated
         and become a range of 1 to 255, so we set all those pixels to 1 (road class)
@@ -129,7 +130,8 @@ class CityscapesDataset(data.Dataset) :
         mask[mask != 0] = 1
         return mask
     
-    def get_filenames(self, path, image_path) :
+    @staticmethod
+    def get_filenames(path, image_path) :
         img_list = list()
         mask_list = list()
         for filename in os.listdir(os.path.join(path, image_path)):
