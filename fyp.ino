@@ -60,9 +60,9 @@ void loop() {
  if (x == 50) // right
     {
       //Serial.print(x);
-      if(pos > 0)
+      if(pos > 30)
       {
-        pos = pos - 30;
+        pos = pos - 20;
         mys.write(pos);
       } 
     }
@@ -70,9 +70,9 @@ void loop() {
  if (x == 49) // left
     {
       //Serial.print(x);
-     if( pos < 180)
+     if( pos < 150)
       {
-        pos = pos + 30;
+        pos = pos + 20;
         mys.write(pos);  
       }
     }
