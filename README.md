@@ -4,4 +4,6 @@ This is the first version of IvLabs' autonomous driving platform. Built using th
 
 This project aims to accomplish A to B navigation with obstacle avoidance within our institute ([VNIT, Nagpur](http://www.vnit.ac.in)) campus.
 
+![Photo of robot](autonomous_car.jpeg)
+
 ### This repo will be updated soon to include installation and usage instructions
