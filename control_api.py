@@ -1,6 +1,7 @@
 '''
 @author: Unmesh Patil
 @project: controlling an autonomous vehicle outdoors using pure pursuit
+@version: 1.1
 
 Control api for autonomous delivery robot for vnit
 input /odom and /goal_pose
