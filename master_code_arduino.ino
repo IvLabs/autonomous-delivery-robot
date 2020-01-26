@@ -2,6 +2,11 @@
 #include<ros.h>
 #include<geometry_msgs/Point32.h>
 
+#include "DynamixelMotor.h"
+
+const long unsigned int baudrate=1000000;
+HardwareDynamixelInterface interface(Serial2);
+DynamixelMotor motor(interface,0);
 
 int led = 13;
 int b_left1 = 8;
@@ -22,19 +27,21 @@ ros::Subscriber<geometry_msgs::Point32> sub("control_input", &messageCb );
 
 
 void setup() {
+ interface.begin(baudrate);
  nh.initNode();
  nh.subscribe(sub);
  pinMode(led, OUTPUT); 
-pinMode(b_left1, OUTPUT);
-pinMode(b_left2, OUTPUT);
-pinMode(sp_pwm, OUTPUT);
-Serial.begin(9600);
-Serial1.begin(57600);
-
+ pinMode(b_left1, OUTPUT);
+ pinMode(b_left2, OUTPUT);
+ pinMode(sp_pwm, OUTPUT);
+ Serial.begin(9600);
+ Serial1.begin(57600);
 }
 
 void loop() {
-
+   if (y>=-440&&y<=440){
+      Bot_Steer(y);
+   }
 
   if (x == 1 && z == 1)   // FORWARD*/
      {
@@ -65,8 +72,17 @@ void loop() {
     //Serial1.println("spinning"); 
     //Serial1.println(x);
   nh.spinOnce(); 
- delay(1);
-   digitalWrite(led, LOW);  
-  
-  }
+  delay(1);
+   digitalWrite(led, LOW); 
+}
+
+
+void Bot_Steer(long int ang){
+  motor.enableTorque();
+  motor.jointMode(1909,2791);
+  motor.speed(512);
+  long int pos;
+  pos = ang+2350;
+  motor.goalPosition(pos);
+}
 
