@@ -164,7 +164,7 @@ def go_to_local_goal(initial, final, angle_0, q):
 	if q == 2 or q == 3:
 		fwd = 0 #rev
 	Servo_factor_raw = get_curvature_from_goal(initial[0], initial[1], final[0], final[1])
-	Servo_factor = Servo_factor_raw * steer_scaling_factor + Steer_to_servo_offset
+	Servo_factor = Servo_factor_raw * steer_scaling_factor + Steer_to_servo_offset ### to be changed
 	target_speed = final[3]
 	control_speed = initial[3]
 	point = Point32()
