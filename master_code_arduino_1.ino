@@ -6,7 +6,7 @@
 #define prx0 A0
 #define prx1 A1
 #define prx2 A2
-
+#define bump = D10
 const long unsigned int baudrate=1000000;
 HardwareDynamixelInterface interface(Serial2);
 DynamixelMotor motor(interface,0);
@@ -40,6 +40,7 @@ void setup() {
  pinMode(b_left1, OUTPUT);
  pinMode(b_left2, OUTPUT);
  pinMode(sp_pwm, OUTPUT);
+ pinMode(bump, INPUT);
  Serial.begin(9600);
  Serial1.begin(57600);
 }
@@ -47,15 +48,14 @@ void setup() {
 void loop() {
 
   prox_flag = Proximity_flag(int Prx0,int Prx1,int Prx2);
-
- if (prox_flag==0){
+  if ((digitalRead(bump)||prox_flag)==0){
    if (y>=-440&&y<=440){
       Bot_Steer(y);
    }
 
   if (x == 1 && z == 1)   // FORWARD*/
      {
-       digitalWrite(led, HIGH); 
+      digitalWrite(led, HIGH); 
       digitalWrite(b_left1, HIGH);
       digitalWrite(b_left2, LOW);
       digitalWrite(sp_pwm, HIGH);
@@ -86,7 +86,10 @@ void loop() {
    digitalWrite(led, LOW); 
  }
  else{
-
+// stop the motor
+      digitalWrite(b_left1, LOW); //h
+      digitalWrite(b_left2, LOW);
+      digitalWrite(sp_pwm, LOW);
 
 //manual mode emergency condition  
   }
