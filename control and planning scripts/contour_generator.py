@@ -17,66 +17,70 @@ import rospy, cv2
 import sys
 from cv_bridge import CvBridge, CvBridgeError
 from opencv_apps.msg import Contour
+from opencv_apps.msg import Point2D
 from sensor_msgs.msg import Image
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Odometry
 
-range_list = []
-segmap_contour = []
-merged_contour = []
-old_list = []
-img = Image()
-curr_pose = Odometry()
 
+final_list = []
+curr_pose = Odometry()
 ######################################################### callacks
 
-def callback_image(data):
+def callback_pose(data):
+	curr_pose = data
+	try:
+		img_data = rospy.wait_for_message("/segmap", Image, timeout = 20)
+		image_proc(img_data)
+	except Exception as e:
+		raise e
+
+def image_proc(data):
+	img = Image()
 	img = data
-	print('img done')
 	bridge = CvBridge()
 	camera_img = bridge.imgmsg_to_cv2(img, 'mono8')
 	xs, ys, mask_blank = get_contours_list(camera_img)
 	i = 0
 	for i in range(len(xs)-1):
 		point = xs[i], ys[i]
-		segmap_contour.append(point) #list of touples
-	print(len(segmap_contour))
-	rospy.Subscriber("/odom", Odometry, callback_pose)
-    
-def callback_pose(data):
-	curr_pose = data
-	print('pose done')
-	rospy.Subscriber("/scan", LaserScan, callback_scan_processor)
+		final_list.append(point) #list of touples
+	try:
+		scan_data = rospy.wait_for_message("/scan", LaserScan, timeout = 20)
+		scan_processor(scan_data)
+	except Exception as e:
+		del final_list[:]
+		raise e	
 
-def callback_scan_processor(data):
-	# the scan input is from -180 to 180 degrees. So total 360 degrees are covered in scan by 0.5 degree increment.
-	# total 720 readings for 360 degrees.
-	for i in range(len(data.ranges)):
-		old_list.append(data.ranges[i])
-	print(len(old_list))
-	j = -math.pi - 0.00872664619237
-	x = curr_pose.pose.pose.position.x
-	y = curr_pose.pose.pose.position.y
-	for i in range(0, 719):
-		r = old_list[i]
-		j = j +  0.00872664619237
-		if j > math.pi:
-			print("out of thetas")
-			return
-		else:
-			x += r*math.cos(j)
-			y += r*math.sin(j)
-			point = x, y
-			range_list.append(point)
-	del old_list[:]
-	if len(range_list) == 719:
-		crop_contour()
+def scan_processor(data):
+	if not len(data.ranges):
+		try:
+			data = rospy.wait_for_message("/scan", LaserScan, timeout = 20)
+		except Exception as e:
+			del final_list[:]
+			raise e	
 	else:
-		print('error in scan Subscriber', len(range_list))
-		del range_list[:]
-		return
-	print('scan done')
+		old_list = []
+		for i in range(len(data.ranges)):
+			old_list.append(data.ranges[i])
+		j = -math.pi - 0.00872664619237
+		xc = curr_pose.pose.pose.position.x
+		yc = curr_pose.pose.pose.position.y
+		for i in range(0, 719):
+			r = old_list[i]
+			j = j +  0.00872664619237
+			if j > math.pi:
+				print("out of thetas")
+				return
+			else:
+				if r:
+					x = xc + r*math.cos(j)
+					y = yc + r*math.sin(j)
+					point = x, y
+					final_list.append(point)
+		del old_list[:]
+		pub_contour()
 
 ######################################################### helping functions
 
@@ -101,41 +105,23 @@ def get_contours_list(bw):
 	mask = cv2.imread("/home/unmesh/sample.png", 0)		
 	ys, xs = np.where(mask & blank == 255)
 	mask_blank = mask & blank
-	print('returning xs ys')
 	return xs, ys, mask_blank
 
-
-def crop_contour():
-	#lidar scan gives 720 readings starting from -pi to pi and the camera scan gives input for 58 degrees.
-	# it is 29 degrees left and 29 degree right of current orientation of bot.
-	curr_theta = curr_pose.pose.pose.orientation.x
-	start = abs(int(curr_theta + 29)*2 - 1)
-	end = abs(int(curr_theta - 29)*2 - 1)
-	if start > end:
-		start, end = end, start
-	if not (0 < start, end < 720) :
-		print('error cropping')
-		return 0
-	for i in range(0, start):
-		merged_contour.append(range_list[i])
-	for i in range(0, len(segmap_contour)):
-		merged_contour.append(segmap_contour[i])
-	for i in range(end, len(range_list)-1):
-		merged_contour.append(range_list[i])
-	pub.publish(merged_contour)
-	print(len(merged_contour))
-	del range_list[:]
-	del segmap_contour[:]
-	del merged_contour[:]
-
+def pub_contour():
+	merged_cont = Contour()
+	merged_cont.points = []
+	for i in range(len(final_list)):
+		point= Point2D()
+		point.x = final_list[i][0]
+		point.y = final_list[i][1]
+		merged_cont.points.append(point)
+	pub.publish(merged_cont)
 
 ######################################################### Main body
 if __name__ == '__main__':
     try:
     	rospy.init_node('contour_generator_node', anonymous=True)
-    	rospy.Subscriber("/segmap", Image, callback_image )
-    	# rospy.Subscriber("/odom", Odometry, callback_pose)
-    	# rospy.Subscriber("/scan", LaserScan, callback_scan_processor)
+    	rospy.Subscriber("/odom", Odometry, callback_pose)
     	pub = rospy.Publisher('/contour_surround', Contour, queue_size=10)
         rospy.spin()
     except rospy.ROSInterruptException:
