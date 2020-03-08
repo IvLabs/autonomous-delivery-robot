@@ -25,18 +25,21 @@ from nav_msgs.msg import Odometry
 
 
 final_list = []
-curr_pose = Odometry()
+
 ######################################################### callacks
 
 def callback_pose(data):
+	curr_pose = Odometry()
 	curr_pose = data
+	xc = curr_pose.pose.pose.position.x
+	yc = curr_pose.pose.pose.position.y
 	try:
-		img_data = rospy.wait_for_message("/segmap", Image, timeout = 20)
-		image_proc(img_data)
+		img_data = rospy.wait_for_message("/segmap", Image)
+		image_proc(img_data, xc, yc)
 	except Exception as e:
 		raise e
 
-def image_proc(data):
+def image_proc(data, xc, yc):
 	img = Image()
 	img = data
 	bridge = CvBridge()
@@ -47,13 +50,13 @@ def image_proc(data):
 		point = xs[i], ys[i]
 		final_list.append(point) #list of touples
 	try:
-		scan_data = rospy.wait_for_message("/scan", LaserScan, timeout = 20)
-		scan_processor(scan_data)
+		scan_data = rospy.wait_for_message("/scan", LaserScan)
+		scan_processor(scan_data, xc, yc)
 	except Exception as e:
 		del final_list[:]
 		raise e	
 
-def scan_processor(data):
+def scan_processor(data, xc, yc):
 	if not len(data.ranges):
 		try:
 			data = rospy.wait_for_message("/scan", LaserScan, timeout = 20)
@@ -65,8 +68,6 @@ def scan_processor(data):
 		for i in range(len(data.ranges)):
 			old_list.append(data.ranges[i])
 		j = -math.pi - 0.00872664619237
-		xc = curr_pose.pose.pose.position.x
-		yc = curr_pose.pose.pose.position.y
 		for i in range(0, 719):
 			r = old_list[i]
 			j = j +  0.00872664619237
@@ -115,6 +116,7 @@ def pub_contour():
 		point.x = final_list[i][0]
 		point.y = final_list[i][1]
 		merged_cont.points.append(point)
+	print('publishing')
 	pub.publish(merged_cont)
 
 ######################################################### Main body
