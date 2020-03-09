@@ -40,6 +40,7 @@ def callback_pose(data):
 		raise e
 
 def image_proc(data, xc, yc):
+	global final_list
 	img = Image()
 	img = data
 	bridge = CvBridge()
@@ -57,6 +58,7 @@ def image_proc(data, xc, yc):
 		raise e	
 
 def scan_processor(data, xc, yc):
+	global final_list
 	if not len(data.ranges):
 		try:
 			data = rospy.wait_for_message("/scan", LaserScan, timeout = 20)
@@ -109,6 +111,7 @@ def get_contours_list(bw):
 	return xs, ys, mask_blank
 
 def pub_contour():
+	global final_list
 	merged_cont = Contour()
 	merged_cont.points = []
 	for i in range(len(final_list)):
