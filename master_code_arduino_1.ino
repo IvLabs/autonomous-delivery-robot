@@ -6,7 +6,7 @@
 #define prx0 A0
 #define prx1 A1
 #define prx2 A2
-#define bump = D10
+#define bump 10
 const long unsigned int baudrate=1000000;
 HardwareDynamixelInterface interface(Serial2);
 DynamixelMotor motor(interface,0);
@@ -17,7 +17,6 @@ int b_left1 = 8;
 int b_left2 = 9;
 int sp_pwm = 10;
 
-bool prox_flag;
 
 ros::NodeHandle nh;
 float x, y, z ;
@@ -46,8 +45,9 @@ void setup() {
 }
 
 void loop() {
-
-  prox_flag = Proximity_flag(int Prx0,int Prx1,int Prx2);
+int Prx0, Prx1, Prx2;
+bool prox_flag;
+prox_flag = Proximity_flag(Prx0, Prx1, Prx2);
   if ((digitalRead(bump)||prox_flag)==0){
    if (y>=-440&&y<=440){
       Bot_Steer(y);
@@ -147,7 +147,7 @@ bool Proximity_flag(int Prx0,int Prx1,int Prx2){
     flag2=0;
   }
 
-  return(flag0 || flag1 || flag2 )
+  return(flag0 || flag1 || flag2);
 }
 
 int get_dist(int prx, bool flag){
