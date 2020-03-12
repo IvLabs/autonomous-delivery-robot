@@ -4,32 +4,25 @@ import rospy
 import std_msgs.msg
 from nav_msgs.msg import Path
 from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import Pose
 
 def waypoints():
     pub = rospy.Publisher('/global_path', Path, queue_size=10)
-    rospy.init_node('waypoints', anonymous=True)
+    rospy.init_node('waypoints_global', anonymous=True)
     rate = rospy.Rate(1) # 10hz
-    pose = PoseStamped()
-    pose1 = PoseStamped()
     path = Path()
     path.poses = []
-    h = std_msgs.msg.Header()
-    pose.pose.position.x = 0
-    pose.pose.position.y = 0
-    pose.pose.position.z = 0
-    pose.pose.orientation.x = 0
-    h.stamp = rospy.Time.now()
-    pose.header = h
-    path.poses.append(pose)
+    for i in range(10):
+        posestamped = PoseStamped()
+        ipose = Pose()
+        ipose.position.x = (1 + i*0.1)
+        ipose.position.y = 0
+        h = std_msgs.msg.Header()
+        h.stamp = rospy.Time.now()
+        posestamped.header = h
+        posestamped.pose = ipose
+        path.poses.append(posestamped)
 
-    pose1.pose.position.x = 0
-    pose1.pose.position.y = 1
-    pose1.pose.position.z = 0
-    pose1.pose.orientation.x = 0
-    h.stamp = rospy.Time.now()
-    pose1.header = h
-    path.poses.append(pose1)
-    print('....')
     while not rospy.is_shutdown():
         pub.publish(path)
         rate.sleep()
