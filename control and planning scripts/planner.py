@@ -11,17 +11,12 @@ TODO::::  Code optimisation
 '''
 ########################################### section 1 imports
 
-import math
-import rospy
-import sys
-from nav_msgs.msg import Path
-from geometry_msgs.msg import PoseStamped
+import math, rospy, sys
+from nav_msgs.msg import Path, Odometry
+from geometry_msgs.msg import PoseStamped, Pose
 from std_msgs.msg import Bool
-from geometry_msgs.msg import Pose
 from sensor_msgs.msg import Image
-from opencv_apps.msg import Contour
-from opencv_apps.msg import Point2D
-from nav_msgs.msg import Odometry
+from opencv_apps.msg import Contour, Point2D
 
 ############################################ section 2 defaults and global vars
 
@@ -33,8 +28,8 @@ Emergency_stop = Bool()
 Emergency_stop = False
 
 waypoint_list_cropped = [] 
-slider_list = [0]*int(lookahead_distance/0.15)
-lookup = [0]*int(lookahead_distance/0.15)
+slider_list = [0]*(lookahead_distance // 0.15)
+lookup = [0]*(lookahead_distance // 0.15)
 
 ############################################ section 3 helper functions
 
@@ -42,6 +37,7 @@ def collision_checker(xs, ys):
 	global lookup
 	global slider_list
 	global waypoint_list_cropped
+	global Emergency_stop
 	#circle-point based checking
 	for i in range(len(waypoint_list_cropped)):
 		if not lookup[i]:
@@ -96,7 +92,7 @@ def slider( i, x_contour, y_contour, check_bool, xs, ys ):
 				if b2:
 					slider_list[i] = False
 					b3 = slider(i, x_contour, y_contour, 1, xs, ys )
-			if not b1 & b2 & b3:
+			if not (b1 and b2 and b3):
 				return False
 		else:
 			print('path not possible better stop here')
@@ -115,7 +111,7 @@ def slider( i, x_contour, y_contour, check_bool, xs, ys ):
 			a, b, c = line_eq(x_path, y_path, x_pre, y_pre)
 			s1 = (a*x_pos + b*y_pos - c)>0			# basically if 2 points lie on same sid eof line then they give same sign when substituted in line eq
 			s2 = (a*x_contour + b*y_contour - c)>0
-			direction = (s1 & s2) + ((not s1) & (not s2)) #xor gate
+			direction = (s1 == s2)
 			if not direction :                    # means 2 points lie on opp. dir of path
 				waypoint_list_cropped[i].x , waypoint_list_cropped[i].y = x_pos , y_pos
 			else:
@@ -137,6 +133,7 @@ def line_eq(x1, y1, x2, y2):
 
 def get_nearest_global_point(waypoint_list, xc, yc):
 	min_dist_sq = 1000
+	near_index = -1
 	for i in range(len(waypoint_list)-1):
 		x_path = waypoint_list[i].x
 		y_path = waypoint_list[i].y
@@ -170,9 +167,9 @@ def callback_odom(data_pose):
 	yc = curr_pose.pose.pose.position.y
 	near_index = get_nearest_global_point(waypoint_list, xc, yc)
 	waypoint_list_cropped = []
-	for i in range(int(lookahead_distance/0.15)):
+	for i in range((lookahead_distance // 0.15)):
 		#assumes points are at distance of 15 cm each considers 10 points in sequence so plan for 1.5 m ahead of curr_pose
-		if len(waypoint_list) > (near_index + i):
+		if (len(waypoint_list) > (near_index + i)) and (near_index != -1):
 			waypoint_list_cropped.append(waypoint_list[near_index + i])
 		else:
 			print('not enough points but still continuing')
@@ -186,8 +183,8 @@ def callback_odom(data_pose):
 		xs.append(contour_points.points[i].x)
 		ys.append(contour_points.points[i].y)
 	collision_checker(xs, ys)
-	slider_list = [0]*int(lookahead_distance/0.15)
-	lookup = [0]*int(lookahead_distance/0.15)
+	slider_list = [0]*(lookahead_distance // 0.15)
+	lookup = [0]*(lookahead_distance // 0.15)
 	del waypoint_list[:]
 	#path_optimiser(new_waypoints)
 	
