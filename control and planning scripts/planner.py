@@ -159,8 +159,7 @@ def callback_odom(data_pose):
 	curr_pose = data_pose
 	waypoint_list = []
 	data = rospy.wait_for_message("/global_path", Path)
-	for i in range(len(data.poses)):
-		waypoint_list.append(data.poses[i].pose.position) #assumes the path is arbitrated
+	waypoint_list.extend(data.poses[i].pose.position for i in range(len(data.poses))
 	contour_points = Contour()
 	print('recieved odom and global_path')
 	xc = curr_pose.pose.pose.position.x
