@@ -12,10 +12,10 @@ def waypoints():
     rate = rospy.Rate(1) # 10hz
     path = Path()
     path.poses = []
-    for i in range(10):
+    for i in range(15):
         posestamped = PoseStamped()
         ipose = Pose()
-        ipose.position.x = (1 + i*0.1)
+        ipose.position.x = (1 + i*0.15)
         ipose.position.y = 0
         h = std_msgs.msg.Header()
         h.stamp = rospy.Time.now()
